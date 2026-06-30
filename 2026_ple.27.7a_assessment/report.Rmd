@@ -1,0 +1,239 @@
+---
+output:
+  word_document:
+    fig_caption: true
+    fig_height: 10
+    fig_width: 10
+    reference_docx: boot/data/reportTemplate.docx
+    toc: true
+    keep_md: false
+  html_document: default
+nocite: '@*'
+---
+
+```{r libraries, include=FALSE}
+library(captioner)
+library(knitr)
+library(pander)
+```
+
+```{r chunk_setup, include=FALSE}
+# CHUNK SETUPS #################################################################
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE,
+                      message=FALSE, results = 'asis')
+```
+
+```{r pander_settings, include = FALSE}
+# PANDER OPTIONS ##############################################################
+panderOptions('table.split.table', Inf)
+panderOptions('keep.trailing.zeros', TRUE)
+panderOptions('table.alignment.default', "center")
+```
+
+```{r caption_counters, include=FALSE}
+table_nums <- captioner("Table", level = 2)
+figure_nums <- captioner("Figure", level = 2)
+
+# set levels, lets choose section 24
+tab_env <- environment(table_nums)
+fig_env <- environment(figure_nums)
+tab_env$OBJECTS$number[[1]] <- list(24, 8)
+fig_env$OBJECTS$number[[1]] <- list(24, 8)
+
+# set table captions in the order they appear in the report to get the numbering correct
+table_nums("catch_table", "Estimated catch at age.")
+table_nums("landings_table", "Estimated landed numbers-at-age (thousands).")
+table_nums("discards_table", "Estimated discarded numbers-at-age (thousands). All discards are included (dead and alive portions).")
+table_nums("population_table", "Estimated population numbers-at-age (thousands).")
+table_nums("f_table", "Estimated fishing mortality-at-age.")
+table_nums("summary_table", "SAM stock assessment summary (approximate 95% confidence intervals). Recruitment (000s), spawning–stock biomass (SSB, tonnes), mean fishing mortality (Fbar) for ages 3–6, total stock biomass (TSB, tonnes) and dead catch tonnage (the sum of landings and 60% of discards).")
+
+# set figure captions in the order they appear in the report to get the numbering correct
+figure_nums("selectivity_plot", "Selectivity of the fishery split into the landed (dashed) and discarded (solid) components as estimated by the SAM model, where the x-axis shows age and the y-axis gives the fishing mortality-at-age split by the proportion of fish (by number) discarded and landed at-age.")
+figure_nums("catchability_plot", "Catchability for the UK (E&W)-BTS-Q3 extended index by age, NIGFS-WIBTS-Q1 and NIGFS-WIBTS-Q4 as estimated by the SAM model.")
+figure_nums("residuals_plot", "Residuals in fits to catch and survey data from the baseline model. Expected values were estimated by the SAM model.")
+
+figure_nums("retro_plot", "Retrospective of SSB, F and Recruitment (age 1).")
+figure_nums("fbar_plot", "Plot of F bar (3-6) from the final assessment run.")
+```
+
+
+
+# Stock report assessment year `r ass_yr`
+
+## Plaice (Pleuronectes platessa) in Division 7.a (Irish Sea) 
+
+### Catch data
+
+```{r catch_table}
+catch_table <- read.taf("report/tables/catage.csv")
+
+# set caption
+set.caption(table_nums("catch_table"))
+
+# Output table
+pander(style_table1(catch_table), missing = "-")
+```
+
+
+### Landings data
+
+```{r landings_table}
+landings_table <- read.taf("report/tables/Landings_25.9.csv")
+
+# set caption
+set.caption(table_nums("landings_table"))
+
+# Output table
+pander(style_table1(landings_table), missing = "-")
+```
+
+
+### Discards data
+
+```{r discards_table}
+discards_table <- read.taf("report/tables/Discards_25.10.csv")
+
+# set caption
+set.caption(table_nums("discards_table"))
+
+# Output table
+pander(style_table1(discards_table), missing = "-")
+```
+
+### Population data
+
+```{r population_table}
+population_table <- read.taf("report/tables/Stock_n_25.11.csv")
+
+# set caption
+set.caption(table_nums("population_table"))
+
+# Output table
+pander(style_table1(population_table), missing = "-")
+```
+
+
+### F data
+
+```{r f_table}
+f_table <- read.taf("report/tables/f_at_age_25.12.csv", colClasses =c(rep("character",10)))
+
+# set caption
+set.caption(table_nums("f_table"))
+
+# Output table
+pander(style_table2(f_table), missing = "-")
+```
+
+
+### SAM stock assessment summary
+
+```{r summary_table}
+suppressWarnings(summary_table<-read.taf("report/tables/Summary_25.13_all.csv", colClasses =c(rep("character",16))))
+
+
+# set caption
+set.caption(table_nums("summary_table"))
+
+# Output table
+pander(style_table2(summary_table), missing = "-")
+```
+
+
+### Selectivity of the fishery 
+
+```{r selectivity_plot, fig.cap = cap_in}
+# Figure Caption
+cap_in <- figure_nums("selectivity_plot")
+
+# Output figure
+include_graphics("report/plots/Fig.25.8.png")
+```
+
+
+### Catchability 
+
+```{r catchability_plot, fig.cap = cap_in}
+# Figure Caption
+cap_in <- figure_nums("catchability_plot")
+
+# Output figure
+include_graphics("report/plots/Fig.25.9.png")
+```
+
+
+### Residuals 
+
+```{r residuals_plot, fig.cap = cap_in}
+# Figure Caption
+cap_in <- figure_nums("residuals_plot")
+
+# Output figure
+include_graphics("report/plots/Fig.25.10.png")
+```
+
+
+### Modelled SSB, recruitment, Fbar and catch 
+
+```{r model_plot, fig.cap = "Figure 24.13: Modelled SSB (tonnes, top left), recruitment (thousands, bottom left), Fbar (ages 3–6, bottom right) catch tonnage (bottom right) using the SAM model. Error dashed lines indicate approximate 95% confidence intervals." }
+
+# Output figure
+include_graphics("report/plots/Fig.25.13.png")
+```
+
+
+### Retrospective assessments 
+
+```{r mohns}
+mohns_rho <- read.taf("output/mohns_rho.csv")
+```
+
+
+The mohns rho value for SSB is `r round(mohns_rho[2], 3)`, for F is `r round(mohns_rho[3], 3)`, for R is `r round(mohns_rho[1], 3)`.
+
+```{r retro_plot_all, fig.cap = paste('Figure 24.14: Retrospective assessments for years', ass_yr- 6,'-',ass_yr- 1,'from the baseline model. SSB (tonnes, top left), recruitment (thousands, bottom left), Fbar (ages 3–6, bottom right) catch tonnage (bottom right). Error dashed lines indicate approximate 95% confidence intervals.')}
+
+# Output figure
+include_graphics("report/plots/Fig.25.14.png")
+```
+
+
+## Retrospective assessments (zoom)  
+
+```{r retro_zoom_plot, fig.cap = paste('Figure 24.15: Retrospective assessments for years', ass_yr- 6,'-',ass_yr- 1,'from the baseline model, showing final years. SSB (tonnes, top left), recruitment (thousands, bottom left), Fbar (ages 3–6, bottom right) catch tonnage (bottom right). Error dashed lines indicate approximate 95% confidence intervals.')}
+
+# Output figure
+include_graphics("report/plots/Fig.25.15.png")
+```
+
+<!---
+###                -------------- extra plots ------------  
+-->
+
+
+<!---
+ The mohns rho value for F is `r round(mohns_rho[1,"Fbar(3-6)"], 3)`.  The 
+ plot of the retrospective is plotted in `r figure_nums("retro_plot", display = "cite")` -->
+
+```{r retro_plot, eval=FALSE, fig.cap=, include=FALSE}
+# Figure Caption
+cap_in <- figure_nums("retro_plot")
+
+# Output figure
+include_graphics("report/plots/retrospective.png")
+```
+
+<!---
+### F at age estimate 
+-->
+
+```{r catch_plot, eval=FALSE, fig.cap=, include=FALSE}
+# Figure Caption
+cap_in <- figure_nums("fbar_plot")
+
+# Output figure
+include_graphics("report/plots/Fbar.png")
+```
+
+
